@@ -1,0 +1,273 @@
+#RFC 959
+
+import socket #libreria sockets
+import sys #errores
+import os #sistema operativo
+from os import walk
+
+#crear socket
+s = socket.socket()
+
+def enviar(mes=''): #hablar
+#Comunicacion cliente - servidor 
+  s.send(bytes(mes + ("\r\n"), "UTF-8")) #Codificacion de caracteres
+
+  
+def cacha(): #escuchar
+#Recibe la respuesta del servidor
+  rec = s.recv(1024)
+  return (rec)
+
+def action(mes=''): #conversar
+#Funcion auxiliar para comunicarse con el servidor
+  enviar(mes)
+  return cacha()
+    
+def pasv():
+#Manejo de comunicacion pasiva
+  while True:
+    validar = '' #validar que este vacio
+    mes = ('PASV') 
+    enviar(mes)
+    mes = (s.recv(1024))
+    mes = mes.decode()
+    nmsg = mes.split('(')
+    nmsg = nmsg[-1].split(')')
+    p = nmsg[0].split(',')
+    newip = '.'.join(p[:4])
+    newport = int(p[4])*256 + int(p[5])
+    return (newip,newport)
+    break
+
+def navegar_local(path=''):
+#Navegar en directorio local
+  for (dirpath, dirnames, filenames) in walk(path):
+    print (dirnames)
+    print (filenames)
+    print ('\n')
+    break
+
+def enviar_archivo(file=''):
+#Envia archivo a servidor
+  newip, newport = pasv()
+  p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  p.connect((newip, newport))
+  enviar('STOR '+file)
+  f = open(file, 'rb')
+  f.close()
+  p.close
+  cacha()
+
+def recibe_archivo(file=''):
+  newip, newport = pasv()
+  p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  p.connect((newip, newport))
+  action('RETR '+file)
+  newfile = open (file, 'w')
+  msg=''
+  newfile.close()
+  p.close
+
+def directorio_local(path=''):
+#Listado de directorio local
+  for (dirpath, dirnames, filenames) in walk(path):
+    print ('"'+dirpath+'"')
+    break  
+
+def listar():
+  newip, newport = pasv()
+  p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  p.connect((newip, newport))
+  mes = ('NLST')
+  action (mes)
+  rec = p.recv(1024)
+  rec = rec.decode()
+  rec.split('\r\n')
+  print(rec)
+  p.send(bytes(mes + ("\r\n"), "UTF-8"))
+  p.close
+  cacha()
+
+
+s.connect((input("Enter FTP Address: "), 21))
+#s.connect(("192.100.230.21", 21))
+s.recv(1024)    
+
+usern = input("Enter user: ")
+action('USER '+usern)
+#action('USER '+'userftp')
+
+passw = input("Enter password: ")
+action('PASS '+passw)
+#action('PASS '+'r3d3sf1s1c@s')
+path = ('/')
+
+
+while True:
+
+  print ('BIENVENIDO')
+  print ('SELECCIONE EL NUMERO DE LA OPCION QUE DESEA REALIZAR')
+  
+  print ('1 - Listar directorio remoto')
+  print ('2 - Change Directory')
+  print ('3 - Enviar Archivo')
+  print ('4 - Recibir Archivo')
+  print ('5 - Salir')
+  opc = input('Opcion: ')
+  if opc == '1':
+    while True:
+      directory = ''
+      print('Directorio Remoto')
+      mes = ('PWD')
+      enviar(mes)
+      directory = s.recv(1024)
+      directory = directory.decode()
+      validar = directory.split('i')
+      validar = validar[0].split(' ')
+      validar = validar[0]
+      if validar == '257':
+        directory = directory.split('"')
+        directory = directory[1]
+        print('"'+directory+'"')
+      else:
+        print('"'+directory+'"')
+      listar()
+      print('\nDirectorio Local')
+      directorio_local(path)
+      navegar_local(path)
+      print(input('Enter '))
+      break
+  if opc == '2':
+    while True:
+    
+      print ('1 - Directorio Local')
+      print ('2 - Directorio Remoto')
+      print ('3 - Regresar')
+      opc2 = input('Opcion: ')
+      if opc2 == '1':
+        path2 = input('Directorio Local (home para regresar): ')
+        if path2 == 'home':
+          path = '/home/'
+        else: 
+          path = (path+path2+'/')
+        navegar_local(path)
+        print(input('Enter '))
+      if opc2 == '2':
+          
+       print('Directorio Remoto (escribe CD para cambiar directorio)')
+       rd = input("Directorio: ")
+      if rd == 'CD':
+        action('CDUP')
+      else:
+        action('CWD '+rd)
+        listar()
+        print(input('\nEnter '))
+      if opc2 == '3':
+       break
+    
+  if opc == '3':
+     while True:
+	 
+      print ('Tipo de Archivo')
+      print ('1 - ASCII')
+      print ('2 - Image')
+      print ('3 - Regresar')
+      opc2 = input('Seleccione una opcion: ')
+      if opc2 == '1':
+       os.path = path
+       file = input('Nombre de Archivo: ')
+      mes = ('TYPE A')
+      enviar(mes)
+      while True:
+          validar = cacha()
+          validar = validar.decode()
+          validar = validar.split("'")
+          validar = validar[0].split(' ')
+          validar = validar[0]
+          if validar == '226':
+            action(mes)
+            cacha()
+            break
+          else:
+            break
+      action(mes)
+      enviar_archivo(file)
+      print(input('Enter '))
+      if opc2 == '2':
+        os.path = path
+        file = input('Nombre de Archivo: ')
+        mes = ('TYPE I')
+        enviar(mes)
+
+        while True:
+          validar = cacha()
+          validar = validar.decode()
+          validar = validar.split("'")
+          validar = validar[0].split(' ')
+          validar = validar[0]
+          if validar == '226':
+            action(mes)
+            cacha()
+            break
+          else:
+            break
+        enviar_archivo(file)
+        print(input('Enter '))
+      if opc2 == '3':
+        break
+  if opc == '4':
+    while True:
+      print ('Tipo de Archivo')
+      print ('1 - ASCII')
+      print ('2 - Image')
+      print ('3 - Regresar')
+      opc2 = input('Seleccione una opcion: ')
+      if opc2 == '1':
+        os.path = path
+        file = input('Nombre de Archivo: ')
+        mes = ('TYPE A')
+        enviar(mes)
+        while True:
+          validar = cacha()
+          validar = validar.decode()
+          validar = validar.split("'")
+          validar = validar[0].split(' ')
+          validar = validar[0]
+          if validar == '226':
+            action(mes)
+            cacha()
+            break
+          else:
+            break
+        recibe_archivo(file)
+        print(input('Enter '))
+
+      if opc2 == '2':
+        os.path = path
+        file = input('Nombre de Archivo: ')
+        mes = ('TYPE I')
+        enviar(mes)
+        while True:
+          validar = cacha()
+          validar = validar.decode()
+          validar = validar.split("'")
+          validar = validar[0].split(' ')
+          validar = validar[0]
+          if validar == '226':
+            action(mes)
+            cacha()
+            break
+          else:
+            break
+        recibe_archivo(file)
+        print(input('Enter '))
+
+      if opc2 == '3':
+        break
+
+  if opc == '5':
+    print(input('\nEnter'))
+    break
+
+s.close
+

@@ -89,7 +89,7 @@ def listar():
   cacha()
 
 
-s.connect((input("Enter FTP Address: "), 21))
+s.connect((input("Direccion: "), 21))
 #s.connect(("192.100.230.21", 21))
 s.recv(1024)    
 
@@ -109,7 +109,7 @@ while True:
   print ('SELECCIONE EL NUMERO DE LA OPCION QUE DESEA REALIZAR')
   
   print ('1 - Listar directorio remoto')
-  print ('2 - Change Directory')
+  print ('2 - Cambiar Directorio')
   print ('3 - Enviar Archivo')
   print ('4 - Recibir Archivo')
   print ('5 - Salir')
@@ -154,9 +154,9 @@ while True:
         print(input('Enter '))
       if opc2 == '2':
           
-       print('Directorio Remoto (escribe CD para cambiar directorio)')
+       print('Directorio Remoto (escribe up para cambiar directorio)')
        rd = input("Directorio: ")
-      if rd == 'CD':
+      if rd == 'up':
         action('CDUP')
       else:
         action('CWD '+rd)
@@ -270,4 +270,6 @@ while True:
     break
 
 s.close
+
+
 
